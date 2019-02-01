@@ -140,6 +140,73 @@ TEST_CASE( "CAPTURE can deal with complex expressions", "[messages][capture]" ) 
     SUCCEED();
 }
 
+template <typename T>
+static void assertion_info( T msg ) {
+    ASSERTION_INFO( msg );
+}
+
+TEST_CASE( "just assertion info", "[assertion info]" ) {
+    assertion_info( "this should NOT be seen" );
+    assertion_info( "this also should NOT be seen" );
+}
+
+TEST_CASE( "just failure after assertion info", "[failing][.][assertion info]" ) {
+    FAIL( "previous assertion info SHOULD not be seen" );
+}
+
+TEST_CASE( "print assertion info if passing assertion info is printed", "[assertion info]" ) {
+    assertion_info( "this MAY be seen IF passing assertion info is printed" );
+    REQUIRE( true );
+}
+
+TEST_CASE( "prints assertion info on failure", "[failing][.][assertion info]" ) {
+    assertion_info( "this SHOULD be seen" );
+    assertion_info( "this SHOULD also be seen" );
+    REQUIRE( false );
+    assertion_info( "but this should NOT be seen" );
+}
+
+TEST_CASE( "not prints assertion info from previous failures", "[failing][.][assertion info]" ) {
+    assertion_info( "this MAY be seen for only the FIRST assertion IF passing assertion info is printed" );
+    REQUIRE( true );
+    assertion_info( "this MAY be seen for only the SECOND assertion IF passing assertion info is printed" );
+    REQUIRE( true );
+    assertion_info( "this SHOULD be seen" );
+    REQUIRE( false );
+}
+
+TEST_CASE( "prints assertion info for only the first assertion", "[failing][.][assertion info]" ) {
+    assertion_info( "this SHOULD be seen only ONCE" );
+    CHECK( false );
+    CHECK( true );
+    assertion_info( "this MAY also be seen only ONCE IF passing assertion info is printed" );
+    CHECK( true );
+    CHECK( true );
+}
+
+TEST_CASE( "stacks assertion info in loops", "[failing][.][assertion info]" ) {
+    ASSERTION_INFO("Count 1 to 3...");
+    for (int i = 1; i <= 3; i++) {
+        assertion_info(i);
+    }
+    CHECK( false );
+
+    ASSERTION_INFO("Count 4 to 6...");
+    for (int i = 4; i <= 6; i++) {
+        assertion_info(i);
+    }
+    CHECK( false );
+}
+
+TEST_CASE( "mix INFO, ASSERT_INFO and WARN", "[assertion info]" ) {
+    INFO("info");
+    assertion_info("assert info");
+    WARN("and warn may mix");
+    INFO("is not reset after assertions tho");
+    assertion_info("careful");
+    WARN("there");
+}
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-value" // In (1, 2), the "1" is unused ...

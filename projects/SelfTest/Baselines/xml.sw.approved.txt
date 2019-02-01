@@ -10714,9 +10714,18 @@ Message from section two
 loose text artifact
       <OverallResult success="false"/>
     </TestCase>
+    <TestCase name="just assertion info" tags="[assertion info]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="just failure" tags="[.][fail][isolated info][messages]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
       <Failure filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
         Previous info should not be seen
+      </Failure>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="just failure after assertion info" tags="[.][assertion info][failing]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Failure filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        previous assertion info SHOULD not be seen
       </Failure>
       <OverallResult success="false"/>
     </TestCase>
@@ -10940,6 +10949,30 @@ loose text artifact
       </Expression>
       <OverallResult success="false"/>
     </TestCase>
+    <TestCase name="mix INFO, ASSERT_INFO and WARN" tags="[assertion info]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        info
+      </Info>
+      <Info>
+        assert info
+      </Info>
+      <Warning>
+        and warn may mix
+      </Warning>
+      <Info>
+        info
+      </Info>
+      <Info>
+        is not reset after assertions tho
+      </Info>
+      <Info>
+        careful
+      </Info>
+      <Warning>
+        there
+      </Warning>
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="more nested SECTION tests" tags="[.][failing][sections]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Section name="doesn't equal" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
         <Section name="equal" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
@@ -11043,6 +11076,42 @@ loose text artifact
     <TestCase name="not allowed" tags="[!throws]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <OverallResult success="true"/>
     </TestCase>
+    <TestCase name="not prints assertion info from previous failures" tags="[.][assertion info][failing]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this MAY be seen for only the FIRST assertion IF passing assertion info is printed
+      </Info>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Info>
+        this MAY be seen for only the SECOND assertion IF passing assertion info is printed
+      </Info>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Info>
+        this SHOULD be seen
+      </Info>
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
     <TestCase name="null strings" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
         <Original>
@@ -11096,6 +11165,78 @@ loose text artifact
         </Expanded>
       </Expression>
       <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="print assertion info if passing assertion info is printed" tags="[assertion info]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this MAY be seen IF passing assertion info is printed
+      </Info>
+      <Expression success="true" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <OverallResult success="true"/>
+    </TestCase>
+    <TestCase name="prints assertion info for only the first assertion" tags="[.][assertion info][failing]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this SHOULD be seen only ONCE
+      </Info>
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Info>
+        this MAY also be seen only ONCE IF passing assertion info is printed
+      </Info>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <Expression success="true" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          true
+        </Original>
+        <Expanded>
+          true
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="prints assertion info on failure" tags="[.][assertion info][failing]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        this SHOULD be seen
+      </Info>
+      <Info>
+        this SHOULD also be seen
+      </Info>
+      <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
     </TestCase>
     <TestCase name="random SECTION tests" tags="[.][failing][sections]" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
       <Section name="doesn't equal" filename="projects/<exe-name>/UsageTests/Misc.tests.cpp" >
@@ -11291,6 +11432,49 @@ loose text artifact
         i := 7
       </Info>
       <Expression success="false" type="REQUIRE" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <OverallResult success="false"/>
+    </TestCase>
+    <TestCase name="stacks assertion info in loops" tags="[.][assertion info][failing]" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+      <Info>
+        Count 1 to 3...
+      </Info>
+      <Info>
+        1
+      </Info>
+      <Info>
+        2
+      </Info>
+      <Info>
+        3
+      </Info>
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
+        <Original>
+          false
+        </Original>
+        <Expanded>
+          false
+        </Expanded>
+      </Expression>
+      <Info>
+        Count 4 to 6...
+      </Info>
+      <Info>
+        4
+      </Info>
+      <Info>
+        5
+      </Info>
+      <Info>
+        6
+      </Info>
+      <Expression success="false" type="CHECK" filename="projects/<exe-name>/UsageTests/Message.tests.cpp" >
         <Original>
           false
         </Original>
@@ -12151,7 +12335,7 @@ loose text artifact
       </Section>
       <OverallResult success="true"/>
     </TestCase>
-    <OverallResults successes="1161" failures="130" expectedFailures="21"/>
+    <OverallResults successes="1167" failures="138" expectedFailures="21"/>
   </Group>
-  <OverallResults successes="1161" failures="129" expectedFailures="21"/>
+  <OverallResults successes="1167" failures="137" expectedFailures="21"/>
 </Catch>
