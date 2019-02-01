@@ -20,7 +20,6 @@ namespace Catch {
     struct SectionInfo;
     struct SectionEndInfo;
     struct MessageInfo;
-    struct MessageBuilder;
     struct Counts;
     struct BenchmarkInfo;
     struct BenchmarkStats;
@@ -46,8 +45,6 @@ namespace Catch {
 
         virtual void pushScopedMessage( MessageInfo const& message ) = 0;
         virtual void popScopedMessage( MessageInfo const& message ) = 0;
-
-        virtual void emplaceAssertionMessage( MessageBuilder const& builder ) = 0;
 
         virtual void handleFatalErrorCondition( StringRef message ) = 0;
 

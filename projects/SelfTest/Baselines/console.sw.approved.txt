@@ -8793,15 +8793,6 @@ Tricky.tests.cpp:<line number>
 No assertions in test case 'has printf'
 
 -------------------------------------------------------------------------------
-just assertion info
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-
-No assertions in test case 'just assertion info'
-
--------------------------------------------------------------------------------
 just failure
 -------------------------------------------------------------------------------
 Message.tests.cpp:<line number>
@@ -8810,16 +8801,6 @@ Message.tests.cpp:<line number>
 Message.tests.cpp:<line number>: FAILED:
 explicitly with message:
   Previous info should not be seen
-
--------------------------------------------------------------------------------
-just failure after assertion info
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: FAILED:
-explicitly with message:
-  previous assertion info SHOULD not be seen
 
 -------------------------------------------------------------------------------
 just info
@@ -9026,26 +9007,6 @@ with message:
   Testing if fib[7] (21) is even
 
 -------------------------------------------------------------------------------
-mix INFO, ASSERT_INFO and WARN
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: warning:
-  info
-  assert info
-  and warn may mix
-
-Message.tests.cpp:<line number>: warning:
-  info
-  is not reset after assertions tho
-  careful
-  there
-
-
-No assertions in test case 'mix INFO, ASSERT_INFO and WARN'
-
--------------------------------------------------------------------------------
 more nested SECTION tests
   doesn't equal
   equal
@@ -9145,29 +9106,6 @@ Misc.tests.cpp:<line number>
 Misc.tests.cpp:<line number>: PASSED:
 
 -------------------------------------------------------------------------------
-not prints assertion info from previous failures
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: PASSED:
-  REQUIRE( true )
-with message:
-  this MAY be seen for only the FIRST assertion IF passing assertion info is
-  printed
-
-Message.tests.cpp:<line number>: PASSED:
-  REQUIRE( true )
-with message:
-  this MAY be seen for only the SECOND assertion IF passing assertion info is
-  printed
-
-Message.tests.cpp:<line number>: FAILED:
-  REQUIRE( false )
-with message:
-  this SHOULD be seen
-
--------------------------------------------------------------------------------
 null strings
 -------------------------------------------------------------------------------
 Misc.tests.cpp:<line number>
@@ -9217,51 +9155,6 @@ Tricky.tests.cpp:<line number>: PASSED:
   REQUIRE( p == 0 )
 with expansion:
   0 == 0
-
--------------------------------------------------------------------------------
-print assertion info if passing assertion info is printed
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: PASSED:
-  REQUIRE( true )
-with message:
-  this MAY be seen IF passing assertion info is printed
-
--------------------------------------------------------------------------------
-prints assertion info for only the first assertion
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: FAILED:
-  CHECK( false )
-with message:
-  this SHOULD be seen only ONCE
-
-Message.tests.cpp:<line number>: PASSED:
-  CHECK( true )
-
-Message.tests.cpp:<line number>: PASSED:
-  CHECK( true )
-with message:
-  this MAY also be seen only ONCE IF passing assertion info is printed
-
-Message.tests.cpp:<line number>: PASSED:
-  CHECK( true )
-
--------------------------------------------------------------------------------
-prints assertion info on failure
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: FAILED:
-  REQUIRE( false )
-with messages:
-  this SHOULD be seen
-  this SHOULD also be seen
 
 -------------------------------------------------------------------------------
 random SECTION tests
@@ -9442,28 +9335,6 @@ Message.tests.cpp:<line number>: FAILED:
 with messages:
   hi
   i := 7
-
--------------------------------------------------------------------------------
-stacks assertion info in loops
--------------------------------------------------------------------------------
-Message.tests.cpp:<line number>
-...............................................................................
-
-Message.tests.cpp:<line number>: FAILED:
-  CHECK( false )
-with messages:
-  Count 1 to 3...
-  1
-  2
-  3
-
-Message.tests.cpp:<line number>: FAILED:
-  CHECK( false )
-with messages:
-  Count 4 to 6...
-  4
-  5
-  6
 
 -------------------------------------------------------------------------------
 std::map is convertible string
@@ -10284,6 +10155,6 @@ Misc.tests.cpp:<line number>
 Misc.tests.cpp:<line number>: PASSED:
 
 ===============================================================================
-test cases:  253 |  173 passed |  76 failed |  4 failed as expected
-assertions: 1325 | 1167 passed | 137 failed | 21 failed as expected
+test cases:  245 |  172 passed |  69 failed |  4 failed as expected
+assertions: 1311 | 1161 passed | 129 failed | 21 failed as expected
 
