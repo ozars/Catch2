@@ -165,6 +165,7 @@ namespace Catch {
         // Reset working state
         resetAssertionInfo();
         m_lastResult = result;
+        m_assertionMessageScopes.clear();
     }
     void RunContext::resetAssertionInfo() {
         m_lastAssertionInfo.macroName = StringRef();
@@ -240,6 +241,10 @@ namespace Catch {
 
     void RunContext::popScopedMessage(MessageInfo const & message) {
         m_messages.erase(std::remove(m_messages.begin(), m_messages.end(), message), m_messages.end());
+    }
+
+    void RunContext::emplaceAssertionMessage( MessageBuilder const& builder ) {
+        m_assertionMessageScopes.emplace_back( builder );
     }
 
     std::string RunContext::getCurrentTestName() const {
