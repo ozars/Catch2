@@ -32,10 +32,12 @@ When the last `CHECK` fails in the "Bar" test case, then only one message will b
 
 `UNSCOPED_INFO` is similar to `INFO` with two key differences:
 
-- Lifetime of unscoped info is not tied to its own scope.
-- Unscoped info can be reported by the first following assertion only, regardless of the result of that assertion.
+- Lifetime of an unscoped message is not tied to its own scope.
+- An unscoped message can be reported by the first following assertion only, regardless of the result of that assertion.
 
-This macro can be used for reporting information from helper functions or inner scopes because lifetime of `UNSCOPED_INFO` is limited by the assertion following whereas lifetime of `INFO` is limited by its own scope. An example:
+In other words, lifetime of `UNSCOPED_INFO` is limited by the following assertion (or by the end of test case/section, whichever comes first) whereas lifetime of `INFO` is limited by its own scope.
+
+These make this macro useful for reporting information from helper functions or inner scopes. An example:
 
 ```cpp
 void print_some_info() {
@@ -102,9 +104,9 @@ This semicolon will be removed with next major version. It is highly advised to 
 
 **UNSCOPED_INFO(** _message expression_ **)**
 
-Similar to `INFO`, but messages are removed from the buffer after each assertion and they are not limited to their own scopes.
+Similar to `INFO`, but messages are not limited to their own scope: They are removed from the buffer after each assertion, section or test case, whichever comes first.
 
-_Note: Unscoped messages are cleared after `WARN` as well._
+_Note: Unscoped messages are reported and cleared after `WARN` as well._
 
 **WARN(** _message expression_ **)**
 
