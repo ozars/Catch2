@@ -132,9 +132,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_UNSCOPED_INFO( macroName, log ) \
-    do { \
-        Catch::getResultCapture().emplaceUnscopedMessage( Catch::MessageBuilder( macroName##_catch_sr, CATCH_INTERNAL_LINEINFO, Catch::ResultWas::Info ) << log ); \
-    } while( false )
+    Catch::getResultCapture().emplaceUnscopedMessage( Catch::MessageBuilder( macroName##_catch_sr, CATCH_INTERNAL_LINEINFO, Catch::ResultWas::Info ) << log )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Although this is matcher-based, it can be used with just a string
