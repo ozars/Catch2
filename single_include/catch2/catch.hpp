@@ -1,6 +1,6 @@
 /*
- *  Catch v2.6.1
- *  Generated: 2019-02-12 19:52:52.262497
+ *  Catch v2.6.1-dev-ozars
+ *  Generated: 2019-02-21 11:32:44.545839
  *  ----------------------------------------------------------
  *  This file has been merged from multiple headers. Please don't edit it directly
  *  Copyright (c) 2019 Two Blue Cubes Ltd. All rights reserved.
@@ -711,6 +711,16 @@ struct is_unique<T0, T1, Rest...> : std::integral_constant
 #define INTERNAL_CATCH_EXPAND2(...) INTERNAL_CATCH_NO## __VA_ARGS__
 #define INTERNAL_CATCH_DEF(...) INTERNAL_CATCH_DEF __VA_ARGS__
 #define INTERNAL_CATCH_NOINTERNAL_CATCH_DEF
+#define INTERNAL_CATCH_STRINGIZE(...) INTERNAL_CATCH_STRINGIZE2(__VA_ARGS__)
+#ifndef CATCH_CONFIG_TRADITIONAL_MSVC_PREPROCESSOR
+#define INTERNAL_CATCH_STRINGIZE2(...) #__VA_ARGS__
+#define INTERNAL_CATCH_STRINGIZE_WITHOUT_PARENS(param) INTERNAL_CATCH_STRINGIZE(INTERNAL_CATCH_REMOVE_PARENS(param))
+#else
+// MSVC is adding extra space and needs another indirection to expand INTERNAL_CATCH_NOINTERNAL_CATCH_DEF
+#define INTERNAL_CATCH_STRINGIZE2(...) INTERNAL_CATCH_STRINGIZE3(__VA_ARGS__)
+#define INTERNAL_CATCH_STRINGIZE3(...) #__VA_ARGS__
+#define INTERNAL_CATCH_STRINGIZE_WITHOUT_PARENS(param) (INTERNAL_CATCH_STRINGIZE(INTERNAL_CATCH_REMOVE_PARENS(param)) + 1)
+#endif
 
 #define INTERNAL_CATCH_REMOVE_PARENS(...) INTERNAL_CATCH_EXPAND1(INTERNAL_CATCH_DEF __VA_ARGS__)
 
@@ -949,7 +959,10 @@ struct AutoReg : NonCopyable {
                     CATCH_INTERNAL_CHECK_UNIQUE_TYPES(Types...)       \
                     int index = 0;                                    \
                     using expander = int[];                           \
-                    (void)expander{(Catch::AutoReg( Catch::makeTestInvoker( &TestFuncName<Types> ), CATCH_INTERNAL_LINEINFO, Catch::StringRef(), Catch::NameAndTags{ Name " - " + Catch::StringMaker<int>::convert(index++), Tags } ), 0)... };/* NOLINT */ \
+                    constexpr char const* tmpl_types[] = {CATCH_REC_LIST(INTERNAL_CATCH_STRINGIZE_WITHOUT_PARENS, INTERNAL_CATCH_REMOVE_PARENS(TmplTypes))};\
+                    constexpr char const* types_list[] = {CATCH_REC_LIST(INTERNAL_CATCH_STRINGIZE_WITHOUT_PARENS, INTERNAL_CATCH_REMOVE_PARENS(TypesList))};\
+                    constexpr auto num_types = sizeof(types_list) / sizeof(types_list[0]);\
+                    (void)expander{(Catch::AutoReg( Catch::makeTestInvoker( &TestFuncName<Types> ), CATCH_INTERNAL_LINEINFO, Catch::StringRef(), Catch::NameAndTags{ Name " - " + std::string(tmpl_types[index / num_types]) + "<" + std::string(types_list[index % num_types]) + ">", Tags } ), index++, 0)... };/* NOLINT */\
                 }                                                     \
             };                                                        \
             static int INTERNAL_CATCH_UNIQUE_NAME( globalRegistrar ) = [](){ \
@@ -1014,7 +1027,10 @@ struct AutoReg : NonCopyable {
                     CATCH_INTERNAL_CHECK_UNIQUE_TYPES(Types...)\
                     int index = 0;\
                     using expander = int[];\
-                    (void)expander{(Catch::AutoReg( Catch::makeTestInvoker( &TestName<Types>::test ), CATCH_INTERNAL_LINEINFO, #ClassName, Catch::NameAndTags{ Name " - " + Catch::StringMaker<int>::convert(index++), Tags } ), 0)... };/* NOLINT */ \
+                    constexpr char const* tmpl_types[] = {CATCH_REC_LIST(INTERNAL_CATCH_STRINGIZE_WITHOUT_PARENS, INTERNAL_CATCH_REMOVE_PARENS(TmplTypes))};\
+                    constexpr char const* types_list[] = {CATCH_REC_LIST(INTERNAL_CATCH_STRINGIZE_WITHOUT_PARENS, INTERNAL_CATCH_REMOVE_PARENS(TypesList))};\
+                    constexpr auto num_types = sizeof(types_list) / sizeof(types_list[0]);\
+                    (void)expander{(Catch::AutoReg( Catch::makeTestInvoker( &TestName<Types>::test ), CATCH_INTERNAL_LINEINFO, #ClassName, Catch::NameAndTags{ Name " - " + std::string(tmpl_types[index / num_types]) + "<" + std::string(types_list[index % num_types]) + ">", Tags } ), index++, 0)... };/* NOLINT */ \
                 }\
             };\
             static int INTERNAL_CATCH_UNIQUE_NAME( globalRegistrar ) = [](){\
@@ -2062,6 +2078,7 @@ namespace Catch {
     struct SectionInfo;
     struct SectionEndInfo;
     struct MessageInfo;
+    struct MessageBuilder;
     struct Counts;
     struct BenchmarkInfo;
     struct BenchmarkStats;
@@ -2087,6 +2104,8 @@ namespace Catch {
 
         virtual void pushScopedMessage( MessageInfo const& message ) = 0;
         virtual void popScopedMessage( MessageInfo const& message ) = 0;
+
+        virtual void emplaceUnscopedMessage( MessageBuilder const& builder ) = 0;
 
         virtual void handleFatalErrorCondition( StringRef message ) = 0;
 
@@ -2251,9 +2270,12 @@ namespace Catch {
     class ScopedMessage {
     public:
         explicit ScopedMessage( MessageBuilder const& builder );
+        ScopedMessage( ScopedMessage& duplicate ) = delete;
+        ScopedMessage( ScopedMessage&& old );
         ~ScopedMessage();
 
         MessageInfo m_info;
+        bool m_moved;
     };
 
     class Capturer {
@@ -2316,7 +2338,7 @@ namespace Catch {
             CATCH_INTERNAL_UNSUPPRESS_PARENTHESES_WARNINGS \
         } INTERNAL_CATCH_CATCH( catchAssertionHandler ) \
         INTERNAL_CATCH_REACT( catchAssertionHandler ) \
-    } while( (void)0, false && static_cast<bool>( !!(__VA_ARGS__) ) ) // the expression here is never evaluated at runtime but it forces the compiler to give it a look
+    } while( (void)0, (false) && static_cast<bool>( !!(__VA_ARGS__) ) ) // the expression here is never evaluated at runtime but it forces the compiler to give it a look
     // The double negation silences MSVC's C4800 warning, the static_cast forces short-circuit evaluation if the type has overloaded &&.
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2396,6 +2418,10 @@ namespace Catch {
 ///////////////////////////////////////////////////////////////////////////////
 #define INTERNAL_CATCH_INFO( macroName, log ) \
     Catch::ScopedMessage INTERNAL_CATCH_UNIQUE_NAME( scopedMessage )( Catch::MessageBuilder( macroName##_catch_sr, CATCH_INTERNAL_LINEINFO, Catch::ResultWas::Info ) << log );
+
+///////////////////////////////////////////////////////////////////////////////
+#define INTERNAL_CATCH_UNSCOPED_INFO( macroName, log ) \
+    Catch::getResultCapture().emplaceUnscopedMessage( Catch::MessageBuilder( macroName##_catch_sr, CATCH_INTERNAL_LINEINFO, Catch::ResultWas::Info ) << log )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Although this is matcher-based, it can be used with just a string
@@ -3815,7 +3841,7 @@ namespace Generators {
     template<typename L>
     // Note: The type after -> is weird, because VS2015 cannot parse
     //       the expression used in the typedef inside, when it is in
-    //       return type. Yeah, ¯\_(ツ)_/¯
+    //       return type. Yeah.
     auto generate( SourceLineInfo const& lineInfo, L const& generatorExpression ) -> decltype(std::declval<decltype(generatorExpression())>().get()) {
         using UnderlyingType = typename decltype(generatorExpression())::type;
 
@@ -3835,6 +3861,207 @@ namespace Generators {
     Catch::Generators::generate( CATCH_INTERNAL_LINEINFO, []{ using namespace Catch::Generators; return makeGenerators( __VA_ARGS__ ); } )
 
 // end catch_generators.hpp
+// start catch_generators_specific.hpp
+
+// start catch_context.h
+
+#include <memory>
+
+namespace Catch {
+
+    struct IResultCapture;
+    struct IRunner;
+    struct IConfig;
+    struct IMutableContext;
+
+    using IConfigPtr = std::shared_ptr<IConfig const>;
+
+    struct IContext
+    {
+        virtual ~IContext();
+
+        virtual IResultCapture* getResultCapture() = 0;
+        virtual IRunner* getRunner() = 0;
+        virtual IConfigPtr const& getConfig() const = 0;
+    };
+
+    struct IMutableContext : IContext
+    {
+        virtual ~IMutableContext();
+        virtual void setResultCapture( IResultCapture* resultCapture ) = 0;
+        virtual void setRunner( IRunner* runner ) = 0;
+        virtual void setConfig( IConfigPtr const& config ) = 0;
+
+    private:
+        static IMutableContext *currentContext;
+        friend IMutableContext& getCurrentMutableContext();
+        friend void cleanUpContext();
+        static void createContext();
+    };
+
+    inline IMutableContext& getCurrentMutableContext()
+    {
+        if( !IMutableContext::currentContext )
+            IMutableContext::createContext();
+        return *IMutableContext::currentContext;
+    }
+
+    inline IContext& getCurrentContext()
+    {
+        return getCurrentMutableContext();
+    }
+
+    void cleanUpContext();
+}
+
+// end catch_context.h
+// start catch_interfaces_config.h
+
+#include <iosfwd>
+#include <string>
+#include <vector>
+#include <memory>
+
+namespace Catch {
+
+    enum class Verbosity {
+        Quiet = 0,
+        Normal,
+        High
+    };
+
+    struct WarnAbout { enum What {
+        Nothing = 0x00,
+        NoAssertions = 0x01,
+        NoTests = 0x02
+    }; };
+
+    struct ShowDurations { enum OrNot {
+        DefaultForReporter,
+        Always,
+        Never
+    }; };
+    struct RunTests { enum InWhatOrder {
+        InDeclarationOrder,
+        InLexicographicalOrder,
+        InRandomOrder
+    }; };
+    struct UseColour { enum YesOrNo {
+        Auto,
+        Yes,
+        No
+    }; };
+    struct WaitForKeypress { enum When {
+        Never,
+        BeforeStart = 1,
+        BeforeExit = 2,
+        BeforeStartAndExit = BeforeStart | BeforeExit
+    }; };
+
+    class TestSpec;
+
+    struct IConfig : NonCopyable {
+
+        virtual ~IConfig();
+
+        virtual bool allowThrows() const = 0;
+        virtual std::ostream& stream() const = 0;
+        virtual std::string name() const = 0;
+        virtual bool includeSuccessfulResults() const = 0;
+        virtual bool shouldDebugBreak() const = 0;
+        virtual bool warnAboutMissingAssertions() const = 0;
+        virtual bool warnAboutNoTests() const = 0;
+        virtual int abortAfter() const = 0;
+        virtual bool showInvisibles() const = 0;
+        virtual ShowDurations::OrNot showDurations() const = 0;
+        virtual TestSpec const& testSpec() const = 0;
+        virtual bool hasTestFilters() const = 0;
+        virtual RunTests::InWhatOrder runOrder() const = 0;
+        virtual unsigned int rngSeed() const = 0;
+        virtual int benchmarkResolutionMultiple() const = 0;
+        virtual UseColour::YesOrNo useColour() const = 0;
+        virtual std::vector<std::string> const& getSectionsToRun() const = 0;
+        virtual Verbosity verbosity() const = 0;
+    };
+
+    using IConfigPtr = std::shared_ptr<IConfig const>;
+}
+
+// end catch_interfaces_config.h
+#include <random>
+
+namespace Catch {
+namespace Generators {
+
+template <typename Float>
+class RandomFloatingGenerator final : public IGenerator<Float> {
+    // FIXME: What is the right seed?
+    std::minstd_rand m_rand;
+    std::uniform_real_distribution<Float> m_dist;
+    Float m_current_number;
+public:
+
+    RandomFloatingGenerator(Float a, Float b):
+        m_rand(getCurrentContext().getConfig()->rngSeed()),
+        m_dist(a, b) {
+        static_cast<void>(next());
+    }
+
+    Float const& get() const override {
+        return m_current_number;
+    }
+    bool next() override {
+        m_current_number = m_dist(m_rand);
+        return true;
+    }
+};
+
+template <typename Integer>
+class RandomIntegerGenerator final : public IGenerator<Integer> {
+    std::minstd_rand m_rand;
+    std::uniform_int_distribution<Integer> m_dist;
+    Integer m_current_number;
+public:
+
+    RandomIntegerGenerator(Integer a, Integer b):
+        m_rand(getCurrentContext().getConfig()->rngSeed()),
+        m_dist(a, b) {
+        static_cast<void>(next());
+    }
+
+    Integer const& get() const override {
+        return m_current_number;
+    }
+    bool next() override {
+        m_current_number = m_dist(m_rand);
+        return true;
+    }
+};
+
+// TODO: Ideally this would be also constrained against the various char types,
+//       but I don't expect users to run into that in practice.
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value,
+GeneratorWrapper<T>>::type
+random(T a, T b) {
+    return GeneratorWrapper<T>(
+        pf::make_unique<RandomIntegerGenerator<T>>(a, b)
+    );
+}
+
+template <typename T>
+typename std::enable_if<std::is_floating_point<T>::value,
+GeneratorWrapper<T>>::type
+random(T a, T b) {
+    return GeneratorWrapper<T>(
+        pf::make_unique<RandomFloatingGenerator<T>>(a, b)
+    );
+}
+
+} // namespace Generators
+} // namespace Catch
+
+// end catch_generators_specific.hpp
 
 // These files are included here so the single_include script doesn't put them
 // in the conditionally compiled sections
@@ -4321,79 +4548,6 @@ namespace Catch {
 #endif
 
 // end catch_test_spec_parser.h
-// start catch_interfaces_config.h
-
-#include <iosfwd>
-#include <string>
-#include <vector>
-#include <memory>
-
-namespace Catch {
-
-    enum class Verbosity {
-        Quiet = 0,
-        Normal,
-        High
-    };
-
-    struct WarnAbout { enum What {
-        Nothing = 0x00,
-        NoAssertions = 0x01,
-        NoTests = 0x02
-    }; };
-
-    struct ShowDurations { enum OrNot {
-        DefaultForReporter,
-        Always,
-        Never
-    }; };
-    struct RunTests { enum InWhatOrder {
-        InDeclarationOrder,
-        InLexicographicalOrder,
-        InRandomOrder
-    }; };
-    struct UseColour { enum YesOrNo {
-        Auto,
-        Yes,
-        No
-    }; };
-    struct WaitForKeypress { enum When {
-        Never,
-        BeforeStart = 1,
-        BeforeExit = 2,
-        BeforeStartAndExit = BeforeStart | BeforeExit
-    }; };
-
-    class TestSpec;
-
-    struct IConfig : NonCopyable {
-
-        virtual ~IConfig();
-
-        virtual bool allowThrows() const = 0;
-        virtual std::ostream& stream() const = 0;
-        virtual std::string name() const = 0;
-        virtual bool includeSuccessfulResults() const = 0;
-        virtual bool shouldDebugBreak() const = 0;
-        virtual bool warnAboutMissingAssertions() const = 0;
-        virtual bool warnAboutNoTests() const = 0;
-        virtual int abortAfter() const = 0;
-        virtual bool showInvisibles() const = 0;
-        virtual ShowDurations::OrNot showDurations() const = 0;
-        virtual TestSpec const& testSpec() const = 0;
-        virtual bool hasTestFilters() const = 0;
-        virtual RunTests::InWhatOrder runOrder() const = 0;
-        virtual unsigned int rngSeed() const = 0;
-        virtual int benchmarkResolutionMultiple() const = 0;
-        virtual UseColour::YesOrNo useColour() const = 0;
-        virtual std::vector<std::string> const& getSectionsToRun() const = 0;
-        virtual Verbosity verbosity() const = 0;
-    };
-
-    using IConfigPtr = std::shared_ptr<IConfig const>;
-}
-
-// end catch_interfaces_config.h
 // Libstdc++ doesn't like incomplete classes for unique_ptr
 
 #include <memory>
@@ -4673,8 +4827,8 @@ namespace Catch {
 
         AssertionStats( AssertionStats const& )              = default;
         AssertionStats( AssertionStats && )                  = default;
-        AssertionStats& operator = ( AssertionStats const& ) = default;
-        AssertionStats& operator = ( AssertionStats && )     = default;
+        AssertionStats& operator = ( AssertionStats const& ) = delete;
+        AssertionStats& operator = ( AssertionStats && )     = delete;
         virtual ~AssertionStats();
 
         AssertionResult assertionResult;
@@ -5758,58 +5912,6 @@ std::string StringMaker<Catch::Detail::Approx>::convert(Catch::Detail::Approx co
 // end catch_approx.cpp
 // start catch_assertionhandler.cpp
 
-// start catch_context.h
-
-#include <memory>
-
-namespace Catch {
-
-    struct IResultCapture;
-    struct IRunner;
-    struct IConfig;
-    struct IMutableContext;
-
-    using IConfigPtr = std::shared_ptr<IConfig const>;
-
-    struct IContext
-    {
-        virtual ~IContext();
-
-        virtual IResultCapture* getResultCapture() = 0;
-        virtual IRunner* getRunner() = 0;
-        virtual IConfigPtr const& getConfig() const = 0;
-    };
-
-    struct IMutableContext : IContext
-    {
-        virtual ~IMutableContext();
-        virtual void setResultCapture( IResultCapture* resultCapture ) = 0;
-        virtual void setRunner( IRunner* runner ) = 0;
-        virtual void setConfig( IConfigPtr const& config ) = 0;
-
-    private:
-        static IMutableContext *currentContext;
-        friend IMutableContext& getCurrentMutableContext();
-        friend void cleanUpContext();
-        static void createContext();
-    };
-
-    inline IMutableContext& getCurrentMutableContext()
-    {
-        if( !IMutableContext::currentContext )
-            IMutableContext::createContext();
-        return *IMutableContext::currentContext;
-    }
-
-    inline IContext& getCurrentContext()
-    {
-        return getCurrentMutableContext();
-    }
-
-    void cleanUpContext();
-}
-
-// end catch_context.h
 // start catch_debugger.h
 
 namespace Catch {
@@ -5996,6 +6098,8 @@ namespace Catch {
         void pushScopedMessage( MessageInfo const& message ) override;
         void popScopedMessage( MessageInfo const& message ) override;
 
+        void emplaceUnscopedMessage( MessageBuilder const& builder ) override;
+
         std::string getCurrentTestName() const override;
 
         const AssertionResult* getLastResult() const override;
@@ -6043,6 +6147,7 @@ namespace Catch {
         Totals m_totals;
         IStreamingReporterPtr m_reporter;
         std::vector<MessageInfo> m_messages;
+        std::vector<ScopedMessage> m_messageScopes; /* Keeps owners of so-called unscoped messages. */
         AssertionInfo m_lastAssertionInfo;
         std::vector<SectionEndInfo> m_unfinishedSections;
         std::vector<ITracker*> m_activeSections;
@@ -9374,14 +9479,20 @@ namespace Catch {
     ////////////////////////////////////////////////////////////////////////////
 
     ScopedMessage::ScopedMessage( MessageBuilder const& builder )
-    : m_info( builder.m_info )
+    : m_info( builder.m_info ), m_moved()
     {
         m_info.message = builder.m_stream.str();
         getResultCapture().pushScopedMessage( m_info );
     }
 
+    ScopedMessage::ScopedMessage( ScopedMessage&& old )
+    : m_info( old.m_info ), m_moved()
+    {
+        old.m_moved = true;
+    }
+
     ScopedMessage::~ScopedMessage() {
-        if ( !uncaught_exceptions() ){
+        if ( !uncaught_exceptions() && !m_moved ){
             getResultCapture().popScopedMessage(m_info);
         }
     }
@@ -10168,6 +10279,7 @@ namespace Catch {
     void RunContext::resetAssertionInfo() {
         m_lastAssertionInfo.macroName = StringRef();
         m_lastAssertionInfo.capturedExpression = "{Unknown expression after the reported line}"_sr;
+        m_messageScopes.clear();
     }
 
     bool RunContext::sectionStarted(SectionInfo const & sectionInfo, Counts & assertions) {
@@ -10215,6 +10327,7 @@ namespace Catch {
 
         m_reporter->sectionEnded(SectionStats(endInfo.sectionInfo, assertions, endInfo.durationInSeconds, missingAssertions));
         m_messages.clear();
+        m_messageScopes.clear();
     }
 
     void RunContext::sectionEndedEarly(SectionEndInfo const & endInfo) {
@@ -10239,6 +10352,10 @@ namespace Catch {
 
     void RunContext::popScopedMessage(MessageInfo const & message) {
         m_messages.erase(std::remove(m_messages.begin(), m_messages.end(), message), m_messages.end());
+    }
+
+    void RunContext::emplaceUnscopedMessage( MessageBuilder const& builder ) {
+        m_messageScopes.emplace_back( builder );
     }
 
     std::string RunContext::getCurrentTestName() const {
@@ -10355,6 +10472,7 @@ namespace Catch {
         m_testCaseTracker->close();
         handleUnfinishedSections();
         m_messages.clear();
+        m_messageScopes.clear();
 
         SectionStats testCaseSectionStats(testCaseSection, assertions, duration, missingAssertions);
         m_reporter->sectionEnded(testCaseSectionStats);
@@ -10762,9 +10880,9 @@ namespace Catch {
             return 1;
 
         auto result = m_cli.parse( clara::Args( argc, argv ) );
-        config();
-        getCurrentMutableContext().setConfig( m_config );
         if( !result ) {
+            config();
+            getCurrentMutableContext().setConfig(m_config);
             Catch::cerr()
                 << Colour( Colour::Red )
                 << "\nError(s) in input:\n"
@@ -12781,7 +12899,7 @@ namespace Catch {
 #ifdef _MSC_VER
         sprintf_s(buffer, "%.3f", duration);
 #else
-        sprintf(buffer, "%.3f", duration);
+        std::sprintf(buffer, "%.3f", duration);
 #endif
         return std::string(buffer);
     }
@@ -13315,7 +13433,7 @@ public:
         case Unit::Nanoseconds:
             return "ns";
         case Unit::Microseconds:
-            return "µs";
+            return "us";
         case Unit::Milliseconds:
             return "ms";
         case Unit::Seconds:
@@ -14464,6 +14582,7 @@ int main (int argc, char * const argv[]) {
 #endif // CATCH_CONFIG_DISABLE_MATCHERS
 
 #define INFO( msg ) INTERNAL_CATCH_INFO( "INFO", msg )
+#define UNSCOPED_INFO( msg ) INTERNAL_CATCH_UNSCOPED_INFO( "UNSCOPED_INFO", msg )
 #define WARN( msg ) INTERNAL_CATCH_MSG( "WARN", Catch::ResultWas::Warning, Catch::ResultDisposition::ContinueOnFailure, msg )
 #define CAPTURE( ... ) INTERNAL_CATCH_CAPTURE( INTERNAL_CATCH_UNIQUE_NAME(capturer), "CAPTURE",__VA_ARGS__ )
 
